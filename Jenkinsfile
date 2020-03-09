@@ -1,10 +1,34 @@
 pipeline {
-  agent any
+  agent {
+    docker {
+      image 'maven:3.3.9-jdk-8'
+    }
+
+  }
   stages {
     stage('Initialize') {
       steps {
-        git(url: 'https://github.com/veeraprasad512/spring-practice', branch: 'master', changelog: true, poll: true)
-        echo 'Pull latest changes from GITHUB'
+        sh '''echo PATH = ${PATH}
+echo M2_HOME = ${M2_HOME}
+mvn clean'''
+      }
+    }
+
+    stage('Build') {
+      steps {
+        sh 'mvn -Dmaven.test.failure.ignore=true install'
+      }
+    }
+
+    stage('Report') {
+      steps {
+        junit 'target/surefire-reports/**/*.xml'
+      }
+    }
+
+    stage('Archive') {
+      steps {
+        archiveArtifacts 'target/*.jar,target/*.hpi'
       }
     }
 
